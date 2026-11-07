@@ -8,6 +8,7 @@
 <meta property="og:description" content="With love, we invite you to our wedding. Please open our invitation.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&family=Kalam:wght@400&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add("js");if(matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("calm")</script>
 <style>
 :root{
   --wood:#46270f; --wood-2:#341c09; --paper:#fffdf5; --ink:#3a2a1f; --soft:#7b6a5c;
@@ -91,14 +92,36 @@ h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:1.9r
 .credit{font-size:.6rem;letter-spacing:.2em;color:var(--soft);margin-top:26px}
 #music{position:fixed;right:12px;bottom:12px;z-index:9;background:#fffdf5;color:var(--rust);border:1px solid var(--rust);font:400 .65rem 'Jost';letter-spacing:.12em;padding:8px 12px;display:none;cursor:pointer}
 body.open #music{display:block}
+
+/* petals */
+#petals{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:15}
+.petal{position:absolute;top:0;will-change:transform;animation:fall var(--dur) linear var(--del) both}
+.petal i{display:block;width:var(--s);height:calc(var(--s)*1.3);border-radius:100% 0 100% 0;background:var(--c);opacity:.92;animation:sway var(--sw) ease-in-out infinite alternate}
+@keyframes fall{from{transform:translate3d(0,-12vh,0) rotate(0)}to{transform:translate3d(var(--dx),112vh,0) rotate(var(--rot))}}
+@keyframes sway{from{transform:translateX(-18px) rotate(-25deg)}to{transform:translateX(18px) rotate(25deg)}}
+.calm #petals{display:none}
+/* guest */
+.guest{font-family:'Kalam',cursive;color:var(--rust);font-size:1.05rem;margin:2px 0 6px;display:none}
+.guest.on{display:block}
+#cover .cg{font-family:'Kalam',cursive;color:#e9b98f;font-size:1.15rem;margin-top:4px;display:none}
+#cover .cg.on{display:block}
+/* name write-in */
+.js:not(.calm) .ch{display:inline-block;opacity:0}
+.js:not(.calm) .open .ch{animation:chIn .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.5s + var(--i)*.1s)}
+@keyframes chIn{from{opacity:0;transform:translateY(14px) scale(.9);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+/* scroll reveal */
+.js:not(.calm) .rv{opacity:0;transform:translateY(22px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1);transition-delay:var(--rd,0s)}
+.js:not(.calm) .rv.in{opacity:1;transform:none}
+.calbtn{margin-top:14px}
 </style>
 </head>
 <body>
-<div id="cover"><p class="blessing">शुभ विवाह</p><p class="cn">Angad<br><span style="font-size:.9rem;letter-spacing:.4em;font-family:Jost">WEDS</span><br>Suhani</p><p class="cs">YOU ARE INVITED</p><button id="openBtn">OPEN INVITATION</button></div>
+<div id="cover"><p class="blessing">शुभ विवाह</p><p class="cn">Angad<br><span style="font-size:.9rem;letter-spacing:.4em;font-family:Jost">WEDS</span><br>Suhani</p><p class="cg" id="gc"></p><p class="cs">YOU ARE INVITED</p><button id="openBtn">OPEN INVITATION</button></div>
 <main class="scroll" id="scroll">
   <div class="rod"></div>
   <div class="sheet">
     <p class="blessing">शुभ विवाह</p>
+    <p class="guest" id="gs"></p>
     <p class="sub">WE ARE GETTING MARRIED!</p>
     <h1 class="names" style="margin-top:18px">
       <span class="n">Angad</span><span class="w">WEDS</span><span class="n">Suhani</span>
@@ -125,6 +148,7 @@ body.open #music{display:block}
       <div class="fn"><div class="d">30<span>NOV</span></div><div><h3>Mehndi</h3><p class="t">5:00 PM</p><p>Chhoti Rastipur, Mau</p></div></div>
       <div class="fn main"><div class="d">01<span>DEC</span></div><div><h3>The Wedding</h3><p class="t">6:00 PM</p><p>RD Palace Banquet Hall &amp; Hotel, Bahadurganj</p></div></div>
     </div>
+    <button class="btn calbtn" id="cal">📅 Save the dates</button>
     <hr>
 
     <section class="story">
@@ -159,7 +183,7 @@ body.open #music{display:block}
   <div class="rod bottom"></div>
 </main>
 <button id="music" aria-pressed="false">♪ Music Off</button>
-<audio id="song" loop preload="auto" playsinline src="song.mp3"></audio>
+<audio id="song" loop preload="auto" playsinline><source src="song-cut.mp3" type="audio/mpeg"><source src="song.mp3" type="audio/mpeg"></audio>
 
 <script>
 // Wedding: 1 Dec 2026, 6:00 PM IST
@@ -181,13 +205,17 @@ share.onclick=async()=>{
 const song=document.getElementById('song'),mb=document.getElementById('music'),cover=document.getElementById('cover');
 function setUI(on){mb.textContent=on?'♪ Music On':'♪ Music Off';mb.setAttribute('aria-pressed',on)}
 function startSong(){return song.play().then(()=>{setUI(true);return true}).catch(()=>{setUI(false);return false})}
+function celebrate(){
+  if(window.__cel)return; window.__cel=true;
+  petals(); revealInit();
+}
 function openCard(){
   document.body.classList.add('open');
   if(cover){cover.classList.add('gone');setTimeout(()=>cover.remove(),700)}
-  startSong();
+  startSong(); celebrate();
 }
 // 1) try real autoplay (works in some browsers)
-song.play().then(()=>{setUI(true);document.body.classList.add('open');if(cover)cover.remove()}).catch(()=>{});
+song.play().then(()=>{setUI(true);document.body.classList.add('open');if(cover)cover.remove();celebrate()}).catch(()=>{});
 // 2) the first tap anywhere opens the card and starts the song
 let started=false;
 function firstTap(){ if(started)return; started=true; openCard(); }
@@ -196,6 +224,66 @@ mb.onclick=(e)=>{ e.stopPropagation(); if(song.paused){startSong()}else{song.pau
 // if the browser still blocked the song, any later tap retries it
 document.addEventListener('touchend',()=>{ if(started&&song.paused&&!song.dataset.manual)startSong() });
 mb.addEventListener('click',()=>{song.dataset.manual=1});
+
+// ---- guest name from link:  ?to=Rahul+ji
+(function(){
+  let n=new URLSearchParams(location.search).get('to')||new URLSearchParams(location.search).get('guest')||'';
+  n=n.trim().slice(0,40).replace(/\b\p{L}/gu,c=>c.toUpperCase());
+  if(!n)return;
+  const gc=document.getElementById('gc'),gs=document.getElementById('gs');
+  gc.textContent='Dear '+n+',';gc.classList.add('on');
+  gs.textContent=n+', aap sadar aamantrit hain 🙏';gs.classList.add('on');
+  document.title='For '+n+' — Angad weds Suhani';
+})();
+// ---- names write in letter by letter
+document.querySelectorAll('.names .n').forEach(el=>{
+  const w=el.textContent;el.setAttribute('aria-label',w);el.textContent='';
+  [...w].forEach((c,i)=>{const s=document.createElement('span');s.className='ch';s.setAttribute('aria-hidden','true');s.style.setProperty('--i',i+(w==='Suhani'?6:0));s.textContent=c;el.appendChild(s)});
+});
+// ---- falling petals
+function petals(){
+  if(document.documentElement.classList.contains('calm'))return;
+  const box=document.createElement('div');box.id='petals';document.body.appendChild(box);
+  const cols=['#d64a6a','#ee7d97','#f4a51c','#e8801a','#ffd9a0','#c2334f'];
+  for(let k=0;k<34;k++){
+    const e=document.createElement('div'),r=Math.random;
+    e.className='petal';
+    e.style.left=(r()*100)+'%';
+    e.style.setProperty('--s',(10+r()*12)+'px');
+    e.style.setProperty('--c',cols[Math.floor(r()*cols.length)]);
+    e.style.setProperty('--dur',(5.5+r()*4)+'s');
+    e.style.setProperty('--del',(r()*3.5)+'s');
+    e.style.setProperty('--dx',((r()-.5)*160)+'px');
+    e.style.setProperty('--rot',((r()-.5)*720)+'deg');
+    e.style.setProperty('--sw',(1.6+r()*1.6)+'s');
+    e.appendChild(document.createElement('i'));box.appendChild(e);
+  }
+  setTimeout(()=>box.remove(),14000);
+}
+// ---- soft reveal while scrolling
+function revealInit(){
+  if(document.documentElement.classList.contains('calm')||!('IntersectionObserver' in window))return;
+  const sel='.arch,.invite,.fam,.lbl,h2,.fn,.story img,.story p,.count,.close,.calbtn,.actions';
+  const els=[...document.querySelectorAll('.sheet '+sel)];
+  els.forEach((e,i)=>{e.classList.add('rv')});
+  document.querySelectorAll('.fn').forEach((e,i)=>e.style.setProperty('--rd',(i*.12)+'s'));
+  const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}}),{threshold:.12});
+  setTimeout(()=>els.forEach(e=>io.observe(e)),700);
+}
+// ---- save the dates (.ics)
+document.getElementById('cal').onclick=()=>{
+  const esc=s=>s.replace(/[,;]/g,'\\$&'),now=new Date().toISOString().replace(/[-:]|\.\d{3}/g,'');
+  const ev=[['Haldi - Angad weds Suhani','20261129T113000Z','20261129T143000Z','Chhoti Rastipur, Mau'],
+            ['Mehndi - Angad weds Suhani','20261130T113000Z','20261130T143000Z','Chhoti Rastipur, Mau'],
+            ['Wedding - Angad weds Suhani','20261201T123000Z','20261201T163000Z','RD Palace Banquet Hall & Hotel, Bahadurganj']];
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Angad weds Suhani//EN'];
+  ev.forEach((e,i)=>L.push('BEGIN:VEVENT','UID:angad-suhani-'+i+'@wedding','DTSTAMP:'+now,'DTSTART:'+e[1],'DTEND:'+e[2],'SUMMARY:'+esc(e[0]),'LOCATION:'+esc(e[3]),
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc(e[0]),'TRIGGER:-P1D','END:VALARM','END:VEVENT'));
+  L.push('END:VCALENDAR');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([L.join('\r\n')],{type:'text/calendar;charset=utf-8'}));
+  a.download='Angad-Suhani-Wedding.ics';document.body.appendChild(a);a.click();a.remove();
+};
 </script>
 </body>
 </html>
